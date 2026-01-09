@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
+import { db } from '../services/db';
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +18,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Session persistence logic remains the same
     try {
       const storedUser = localStorage.getItem('daily-story-user');
       if (storedUser) {
@@ -30,27 +32,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, pass: string): Promise<void> => {
-    // This is a mock login. In a real app, you'd call an API.
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockUser: User = { id: 'user-1', username: 'Storyteller', email };
-        localStorage.setItem('daily-story-user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        resolve();
-      }, 500);
-    });
+    const loggedInUser = await db.loginUser(email, pass);
+    localStorage.setItem('daily-story-user', JSON.stringify(loggedInUser));
+    setUser(loggedInUser);
   };
 
   const signup = async (username: string, email: string, pass: string): Promise<void> => {
-    // Mock signup
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newUser: User = { id: `user-${Date.now()}`, username, email };
-        localStorage.setItem('daily-story-user', JSON.stringify(newUser));
-        setUser(newUser);
-        resolve();
-      }, 500);
-    });
+    const newUser = await db.signupUser(username, email, pass);
+    localStorage.setItem('daily-story-user', JSON.stringify(newUser));
+    setUser(newUser);
   };
 
   const logout = () => {
